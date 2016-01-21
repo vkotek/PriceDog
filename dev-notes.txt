@@ -1,1 +1,15 @@
 # Development notes
+
+# Schematics
+
+Databases;
+  1) Product database
+    - ID; PK
+    - prod_name
+    - prod_URL
+  2) Prices database
+    - ID; PK
+    - price_date
+    - price_val
+
+  Later implementation: Database of categories and shops
