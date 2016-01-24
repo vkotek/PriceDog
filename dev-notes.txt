@@ -3,15 +3,22 @@
 # Schematics
 
 Databases;
-  1) Product database
+  1) Product table
     - ID; PK
     - prod_code
     - prod_name
     - prod_URL
-  2) Prices database
+  2) Prices table
     - ID; PK
-    - shop_name
+    - Product ID; FK
+    - Shop ID; FK
     - price_date
     - price_val
+  3) Shops table
+    - ID; PK
+    - Shop name
+    
+    
 
-  Later implementation: add product categories? 
+
+
