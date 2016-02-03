@@ -1,11 +1,21 @@
 #!/usr/bin/python
+# coding: utf-8
 
 from bs4 import BeautifulSoup
-import requests, re
+import ConfigParser as cp
+import requests, re, sys
 import MySQLdb as sql
 
+# Import database credentials from secured config file
+config = cp.RawConfigParser()
+config.read('/var/www/config.ini')
+db_user = config.get('database','username')
+db_pass = config.get('database','password')
+db_name = config.get('database','database')
+
+
 # Open database connection
-db = sql.connect("localhost","pricedog","14B9Rsjsi2","pricedog")
+db = sql.connect("localhost",db_user,db_pass,db_name)
 # prepare db cursor
 cursor = db.cursor()
 
@@ -24,18 +34,18 @@ url = [
 # List of shops to scan prices for. This ID can be found in the URL of the 'koupit' hyperlink on Heureka.
 shops = ['czc-cz','mall-cz','alza-cz']
 
-def db_getshops(product):
+def db_getshops():
     # This version of beta uses the shop_link table, allowing each product to use different shops
     BETA_args = """
     SELECT shops.code
     FROM shops
     LEFT JOIN shop_link
     ON shops.id = shop_link.shop_id
-    WHERE shop_link.product_id = 1
+    WHERE shop_link.product_id = ???
     """
     # For now, lets use all shops for all products.
     args = """
-    SELECT code
+    SELECT id,code
     FROM shops
     """
     cursor.execute(args)
@@ -47,12 +57,12 @@ def db_getshops(product):
 def db_getprices(products):
 
     results = [] # Setup empty list where dictionaries of products will be stored
-    
+    results_sql = []
     # Product/URL loop
     for product in products:
         
-        # Get shops for product
-        shops = db_getshops(product[0])
+        # Get list of shops
+        shops = db_getshops()
         
         # Get html data from products page
         html = requests.get(product[1]).text
@@ -71,11 +81,27 @@ def db_getprices(products):
         # Go through each buy button, check if link is in shop list, convert price to int, append to results.
         for item in items:
             for shop in shops:
-                if shop[0] in item.get('href'):
-                    prices[shop] = re.sub("[^0-9]","",item.text)
-        results.append(result)
-    print results
-    return results
+                if shop[1] in item.get('href'):
+                    price = re.sub("[^0-9]","",item.text)
+                    # product ID, shop ID, date, price
+                    result = (product[0],shop[0],price)
+                    results_sql.append(result)
+    return results_sql
+
+def db_insertprices(data):
+    
+    # Prepare general statement for insertin data from array
+    stmt = """
+    INSERT INTO prices(product_id, shop_id, date, price)
+    VALUES (%s,%s,CURDATE(),%s)
+    """
+    # Try to insert data into DB
+    try:
+        cursor.executemany(stmt, data)
+        db.commit()
+        print "New prices successfuly inserted into database"
+    except:
+        db.rollback()
 
 def db_addproduct(url):
     # Add a new product to the list by passing its Heureka URL.
@@ -108,6 +134,26 @@ def db_addproduct(url):
     except: # Rollback if shit hits the fan
         db.rollback()
     
+def cron():
+    # Get prices for products for all shops
+    data = db_getprices(db_getproducts())
+    # Insert prices into DB
+    db_insertprices(data)
+    
+def add_product():
+    db_addproduct(sys.argv[2])
+    
+def help():
+    print """
+    core.py [option] [arg]
+    
+    [option]:
+        add_product     - Add new product, requires [arg] with URL of Heureka page
+        cron            - Cron task to get prices and insert them into DB
+    """
 
-db_getprices(db_getproducts())
-#db_addproduct(url)
+if __name__ == '__main__':
+    globals()[sys.argv[1]]()
+
+#new_product = str(raw_input("Heureka URL:"))
+#db_addproduct(new_product)
