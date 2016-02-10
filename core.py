@@ -8,7 +8,7 @@ import MySQLdb as sql
 
 # Import database credentials from secured config file
 config = cp.RawConfigParser()
-config.read('/var/www/config.ini')
+config.read('/var/www-secret/config.ini')
 db_user = config.get('database','username')
 db_pass = config.get('database','password')
 db_name = config.get('database','database')
@@ -25,14 +25,6 @@ def db_getproducts():
     cursor.execute("SELECT id,code,name FROM products")
     products = cursor.fetchall() 
     return products
-
-url = [
-    "http://mobilni-telefony.heureka.cz/apple-iphone-5s-16gb/",
-    "http://mobilni-telefony.heureka.cz/huawei-honor-7-16gb/",
-    "http://mobilni-telefony.heureka.cz/lenovo-p70/"]
-
-# List of shops to scan prices for. This ID can be found in the URL of the 'koupit' hyperlink on Heureka.
-shops = ['czc-cz','mall-cz','alza-cz']
 
 def db_getshops():
     # This version of beta uses the shop_link table, allowing each product to use different shops
@@ -119,7 +111,6 @@ def db_addproduct(url):
     if item_name in product:
         print "This product is already in the list"
         return
-    print "I should'be be here"
     
     # If it isnt, lets continue
     sql = """
@@ -133,7 +124,9 @@ def db_addproduct(url):
         db.commit()
     except: # Rollback if shit hits the fan
         db.rollback()
-    
+    print "%s has been added." % item_name
+    return    
+
 def cron():
     # Get prices for products for all shops
     data = db_getprices(db_getproducts())
