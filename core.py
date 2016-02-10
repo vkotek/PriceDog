@@ -1,10 +1,15 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from bs4 import BeautifulSoup
-import ConfigParser as cp
-import requests, re, sys
-import MySQLdb as sql
+try:
+    from bs4 import BeautifulSoup
+    import ConfigParser as cp
+    import requests, re, sys
+    import MySQLdb as sql
+except Val:
+    print "Error importing modules, exiting."
+    exit()
+    
 
 # Import database credentials from secured config file
 config = cp.RawConfigParser()
