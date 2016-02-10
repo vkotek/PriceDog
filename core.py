@@ -1,10 +1,15 @@
 #!/usr/bin/python
 # coding: utf-8
 
-from bs4 import BeautifulSoup
-import ConfigParser as cp
-import requests, re, sys
-import MySQLdb as sql
+try:
+    from bs4 import BeautifulSoup
+    import ConfigParser as cp
+    import requests, re, sys
+    import MySQLdb as sql
+except Val:
+    print "Error importing modules, exiting."
+    exit()
+    
 
 # Import database credentials from secured config file
 config = cp.RawConfigParser()
@@ -26,10 +31,6 @@ def db_getproducts():
     products = cursor.fetchall() 
     return products
 
-url = [
-    "http://mobilni-telefony.heureka.cz/apple-iphone-5s-16gb/",
-    "http://mobilni-telefony.heureka.cz/huawei-honor-7-16gb/",
-    "http://mobilni-telefony.heureka.cz/lenovo-p70/"]
 
 # List of shops to scan prices for. This ID can be found in the URL of the 'koupit' hyperlink on Heureka.
 shops = ['czc-cz','mall-cz','alza-cz']
