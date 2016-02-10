@@ -96,6 +96,7 @@ def db_insertprices(data):
     try:
         cursor.executemany(stmt, data)
         db.commit()
+        print stmt
         print "New prices successfuly inserted into database"
     except:
         db.rollback()
