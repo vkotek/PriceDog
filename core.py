@@ -150,6 +150,8 @@ def help():
         add_product     - Add new product, requires [arg] with URL of Heureka page
         cron            - Cron task to get prices and insert them into DB
     """
+def dev():
+    print db_getprices(db_getproducts())
 
 if __name__ == '__main__':
     globals()[sys.argv[1]]()
