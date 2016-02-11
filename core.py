@@ -47,6 +47,7 @@ def db_getshops():
     """
     cursor.execute(args)
     shops = cursor.fetchall()
+    print "Shops from DB: ", shops
     return shops
 
 # Scraping function scans 'urls' list and collects prices for items in 'shops' list.
@@ -55,14 +56,19 @@ def db_getprices(products):
 
     results = [] # Setup empty list where dictionaries of products will be stored
     results_sql = []
+    db_shops = db_getshops()
+
     # Product/URL loop
     for product in products:
-        
+        print product
+        shops = list(db_shops)
         # Get list of shops
-        shops = db_getshops()
+        # shops = db_getshops()
         
         # Get html data from products page
-        html = requests.get(product[1]).text
+        url = product[1] + "?expand=1#!o=4"
+        print url
+        html = requests.get(url).text
         soup = BeautifulSoup(html, 'html.parser')
 
         # Get fancy product name
@@ -79,6 +85,8 @@ def db_getprices(products):
         for item in items:
             for shop in shops:
                 if shop[1] in item.get('href'):
+                    shops.pop(shops.index(shop))
+                    print shop, " > MATCH!"
                     price = re.sub("[^0-9]","",item.text)
                     # product ID, shop ID, date, price
                     result = (product[0],shop[0],price)
@@ -149,9 +157,13 @@ def help():
     [option]:
         add_product     - Add new product, requires [arg] with URL of Heureka page
         cron            - Cron task to get prices and insert them into DB
+        dev		- Runs a test scrape, prints prices to terminal only.
     """
 def dev():
-    print db_getprices(db_getproducts())
+    data = db_getproducts()
+    print data
+    data2 = db_getprices(data)
+    print data2
 
 if __name__ == '__main__':
     globals()[sys.argv[1]]()
